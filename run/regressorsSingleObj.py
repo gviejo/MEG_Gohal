@@ -40,7 +40,7 @@ parser.add_option("-o", "--output", action="store", help="The output file of bes
 # -----------------------------------
 # HUMAN LEARNING
 # -----------------------------------
-human2 = HLearning(dict({'meg':('../../PEPS_GoHaL/Beh_Model/',48)}))
+human2 = HLearning(dict({'meg':('../PEPS_GoHaL/Beh_Model/',48)}))
 with open("meg.pickle", 'rb') as f:
 	human = pickle.load(f)
 # REMOVING S1
@@ -48,11 +48,11 @@ human.pop('S1')
 # -----------------------------------
 # VARIABLES NAME 
 # -----------------------------------
-variables = {'bayesian':['p_a', 'Hb', 'N', 'Q'],
+variables = {'bayesian':['p_a', 'Hb', 'Q'],
 			'qlearning':['p_a', 'Hf', 'Q', 'delta'],
-			'fusion':['p_a', 'Hb', 'Hf', 'N', 'Q', 'delta'],
+			'fusion':['p_a', 'Hb', 'Hf','Q', 'delta', 'p_dec', 'p_ret', 'p_sig', 'p_at'],
 			'selection':['p_a', 'Hb', 'Hf', 'N', 'Q', 'delta', 'vpi', 'r_rate'],
-			'mixture':['p_a', 'Hb', 'Hf', 'N', 'Q', 'delta', 'w', ]}
+			'mixture':['p_a', 'Hb', 'Hf', 'Q', 'delta', 'w', ]}
 # -----------------------------------
 # -----------------------------------
 # LOADING DATA
@@ -82,29 +82,32 @@ for s in subjects:
 # Testing
 # ---------------------------------
 models = front.pareto.keys()
-# for s in subjects:
-for s in ['S3']:
+for s in subjects:
 	# os.system("mkdir matlab/"+s)
-	# for m in front.data.keys():
-	for m in ['fusion']:
+	for m in front.data.keys():	
 		print s, m
 		data = np.zeros(4, dtype = {'names':variables[m], 'formats':['O']*len(variables[m])})						
 		parameters = best_parameters[s][m]
 		front.models[m].__init__(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], parameters, sferes = True)		
 		front.models[m].value = np.zeros((4,60))
 		front.models[m].reaction = np.zeros((4,60))				
-		# for i in xrange(4):
-		for i in xrange(1):
+		for i in xrange(4):
 			front.models[m].startBloc()
 			nb_trials = human2.subject['meg'][s][i+1]['sar'].shape[0]
 			for v in variables[m]:
 				data[v][i] = []
 			for j in xrange(nb_trials):
 				state, action, reward = human2.subject['meg'][s][i+1]['sar'][j]
-				front.models[m].computeValue(state-1, action-1, (i,j))				
+				front.models[m].computeValue(state-1, action-1, (i,j))												
+				front.models[m].updateValue(reward)
+				
 				data[i]['p_a'].append(front.models[m].p_a.copy())
 				data[i]['Q'].append(front.models[m].q_values.copy())
-				front.models[m].updateValue(reward)
+				if m is 'fusion':
+					data[i]['p_sig'].append(front.models[m].p_sigmoide)
+					data[i]['p_ret'].append(front.models[m].p_retrieval)
+					data[i]['p_dec'].append(front.models[m].p_decision)
+					data[i]['p_at'].append(front.models[m].p_actions)
 				if 'N' in variables[m]:
 					data[i]['N'].append(front.models[m].N)
 					data[i]['Hb'].append(front.models[m].Hb)
@@ -115,7 +118,7 @@ for s in ['S3']:
 					data[i]['vpi'].append(front.models[m].vpi)
 					data[i]['r_rate'].append(front.models[m].r_rate)
 				if m == 'mixture':
-					data[i]['w'].append(front.models[m].w[front.models[m].current_state])
+					data[i]['w'].append(front.models[m].w[front.models[m].current_state])		
 		for i in xrange(4):
 			for v in variables[m]:
 				data[i][v] = np.array(data[i][v])		

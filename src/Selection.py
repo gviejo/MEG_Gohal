@@ -71,6 +71,8 @@ class FSelection():
         if self.sferes:
             self.value = np.zeros((n_blocs, n_trials))
             self.reaction = np.zeros((n_blocs, n_trials))
+            self.p_decision = None
+            self.p_retrieval = None
         else:
             self.state = list()
             self.action = list()
@@ -114,6 +116,8 @@ class FSelection():
         self.current_action = None
         self.Hb = self.max_entropy
         self.Hf = self.max_entropy    
+        self.p_decision = None
+        self.p_retrieval = None
 
     def startExp(self):        
         self.state = list()
@@ -195,18 +199,20 @@ class FSelection():
         self.Hf = -(self.p_a_mf*np.log2(self.p_a_mf)).sum()
         self.nb_inferences = 0
         self.p_a_mb = np.ones(self.n_action)*(1./self.n_action)        
-        p_decision = np.zeros((self.n_element+1,1))
-        p_retrieval= np.zeros((self.n_element+1,1))
-        p_a = np.zeros((self.n_element+1, self.n_action))
-        q_values = np.zeros((self.n_element+1, self.n_action))
-        reaction = np.zeros(self.n_element+1)
+        self.p_decision = np.zeros(int(self.parameters['length'])+1)
+        self.p_retrieval= np.zeros(int(self.parameters['length'])+1)
+        self.p_sigmoide = np.zeros(int(self.parameters['length'])+1)
+        self.p_actions = np.zeros((int(self.parameters['length'])+1,self.n_action))        
+        q_values = np.zeros((int(self.parameters['length'])+1, self.n_action))
+        reaction = np.zeros(int(self.parameters['length'])+1)
         # START
         self.sigmoideModule()
-        p_decision[0] = self.pA
-        p_retrieval[0] = 1.0-self.pA
+        self.p_sigmoide[0] = self.pA
+        self.p_decision[0] = self.pA
+        self.p_retrieval[0] = 1.0-self.pA
         self.fusionModule()
         q_values[0] = self.values_net
-        p_a[0] = self.p_a
+        self.p_actions[0] = self.p_a
         H = -(self.p_a*np.log2(self.p_a)).sum()
         reaction[0] = float(H)
         # reaction[0] = float(H)
@@ -214,34 +220,20 @@ class FSelection():
             self.inferenceModule()
             self.evaluationModule()
             self.fusionModule()
-            p_a[i+1] = self.p_a
+            self.p_actions[i+1] = self.p_a
             q_values[i+1] = self.values_net
             H = -(self.p_a*np.log2(self.p_a)).sum()
             N = self.nb_inferences+1.0
             reaction[i+1] = float(((np.log2(N))**self.parameters['sigma'])+H)
             self.sigmoideModule()
-            # if ind[0] == 1 and ind[1] == 15 and i == 8:
-            #     print self.values_net
-            #     print self.values_net * float(self.parameters['beta'])
-            #     print np.exp(self.values_net * float(self.parameters['beta']))
-            #     print a
-            #     print self.p_a, np.sum(self.p_a)
-                # print self.parameters['beta']
-                # sys.exit()
-            p_decision[i+1,0] = self.pA*p_retrieval[i]            
-            p_retrieval[i+1,0] = (1.0-self.pA)*p_retrieval[i]        
+            self.p_sigmoide[i+1] = self.pA            
+            self.p_decision[i+1] = self.pA*self.p_retrieval[i]            
+            self.p_retrieval[i+1] = (1.0-self.pA)*self.p_retrieval[i]        
         self.N = self.nb_inferences
-        self.p_a = (p_decision*p_a).sum(0)
-        self.q_values = (p_decision*q_values).sum(0)
+        self.p_a = np.dot(self.p_decision,self.p_actions)
+        self.q_values = np.dot(self.p_decision,q_values)
         self.value[ind] = float(np.log(self.p_a[self.current_action]))        
-        self.reaction[ind] = float(np.sum(reaction*np.round(p_decision.flatten(),3)))
-        
-        # if ind[0] == 1 and ind[1] == 15:
-        #     print self.n_element
-        #     print " ".join(p_a[:,self.current_action].astype(str))
-        #     print len(p_decision), p_decision.transpose()
-
-        # self.reaction_predicted[ind] = float(np.mean(np.random.choice(reaction, 5000, p = p_decision)))                
+        self.reaction[ind] = float(np.sum(reaction*np.round(self.p_decision.flatten(),3)))    
             
     def chooseAction(self, state):
         self.state[-1].append(state)
@@ -746,12 +738,15 @@ class CSelection():
         self.p_a_mf = self.p_a_mf/np.sum(self.p_a_mf)
         self.Hf = -(self.p_a_mf*np.log2(self.p_a_mf)).sum()
         self.p_a = (1.0-self.w[self.current_state])*self.p_a_mf + self.w[self.current_state]*self.p_a_mb                
-        self.q_values = self.p_a        
+        self.q_values = self.p_a      
+
+        #nombre de inf
+        ninf = np.isinf(self.p_a).sum()  
         if np.isinf(self.p_a).sum():
-            self.p_a = np.isinf(self.p_a)*0.9999995+0.0000001
-        else:
-            self.p_a = self.p_a/np.sum(self.p_a)
-        # if np.isnan(self.p_a).sum(): self.p_a = np.isnan(self.p_a)*0.9995+0.0001
+            self.p_a = np.isinf(tmp)*((1.0/float(ninf))-ninf*0.0000001-0.0000001/ninf) + 0.0000001
+        else :
+            self.p_a = self.p_a/np.sum(self.p_a)   
+        
         if not self.sferes:
             # qlearning
             tmp = np.exp(self.q_mf[self.current_state]*float(self.parameters['beta']))
