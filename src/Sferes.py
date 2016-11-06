@@ -247,10 +247,9 @@ class pareto():
         if 'one' in self.directory:
             self.simpleLoadData()
         elif 'two' in self.directory:
-            # self.loadData()
-            self.simpleLoadData()
-        else:
-            print "Speficify one or two objectifs."
+            self.loadData()
+            # self.simpleLoadData()
+        
         
 
     def showBrute(self):
@@ -417,7 +416,7 @@ class pareto():
                     self.pareto[m][s] = self.pareto[m][s][tmp.sum(1)>0]
 
     def reTest(self):
-        for s in self.extremum.keys():
+        for s in self.extremum.keys():        
         # for s in ['S3']:            
             for m in self.extremum[s].keys():
                 parameters = self.extremum[s][m]
@@ -681,7 +680,8 @@ class pareto():
         return 
 
     def timeConversion(self):
-        for o in self.p_test.iterkeys():
+        # for o in self.p_test.iterkeys():
+        for o in ['owa']:
             self.timing[o] = dict()
             for s in self.p_test[o].iterkeys():
                 self.timing[o][s] = dict()
@@ -713,8 +713,9 @@ class pareto():
                 
                 if np.sum(np.round(real,2)==np.round(opt.fit, 2))!= 2:
                     print o, s, m
-                    print "from test :", opt.fit
-                    print "from sferes :", real
+                    print "from test :", np.round(opt.fit[0], 2), np.round(opt.fit[1], 2)
+                    print "from sferes :", np.round(real[0], 2), np.round(real[1], 2)
+                    print "\n"
 
     def timeConversion_singleStrategy(self, p_test, rank):
         o = 'tche'

@@ -40,7 +40,10 @@ class FSelection():
                             "noise":[0.0, 0.1],
                             "gain":[0.00001, 10000.0], # sigmoide parameter 
                             "sigma":[0.0, 20.0],
-                            "gamma":[0.0, 100.0]}) # temperature for entropy from qlearning soft-max
+                            "gamma":[0.0, 100.0],
+                            "kappa":[0.0, 1.0],
+                            "shift":[-20.0, 20.0]
+                            }) # temperature for entropy from qlearning soft-max
                             
 
         #Probability Initialization
@@ -202,16 +205,18 @@ class FSelection():
         self.p_decision = np.zeros(int(self.parameters['length'])+1)
         self.p_retrieval= np.zeros(int(self.parameters['length'])+1)
         self.p_sigmoide = np.zeros(int(self.parameters['length'])+1)
-        self.p_actions = np.zeros((int(self.parameters['length'])+1,self.n_action))        
-        q_values = np.zeros((int(self.parameters['length'])+1, self.n_action))
+        self.p_actions = np.zeros((int(self.parameters['length'])+1,self.n_action))
+        self.evolution_entropy = np.zeros(int(self.parameters['length'])+1)
+        self.q_values = np.zeros((int(self.parameters['length'])+1, self.n_action))
         reaction = np.zeros(int(self.parameters['length'])+1)
         # START
         self.sigmoideModule()
         self.p_sigmoide[0] = self.pA
         self.p_decision[0] = self.pA
         self.p_retrieval[0] = 1.0-self.pA
+        self.evolution_entropy[0] = self.Hb
         self.fusionModule()
-        q_values[0] = self.values_net
+        self.q_values[0] = self.values_net
         self.p_actions[0] = self.p_a
         H = -(self.p_a*np.log2(self.p_a)).sum()
         reaction[0] = float(H)
@@ -221,17 +226,20 @@ class FSelection():
             self.evaluationModule()
             self.fusionModule()
             self.p_actions[i+1] = self.p_a
-            q_values[i+1] = self.values_net
+            self.q_values[i+1] = self.values_net
             H = -(self.p_a*np.log2(self.p_a)).sum()
             N = self.nb_inferences+1.0
             reaction[i+1] = float(((np.log2(N))**self.parameters['sigma'])+H)
             self.sigmoideModule()
+            ############
             self.p_sigmoide[i+1] = self.pA            
             self.p_decision[i+1] = self.pA*self.p_retrieval[i]            
             self.p_retrieval[i+1] = (1.0-self.pA)*self.p_retrieval[i]        
+            self.evolution_entropy[i+1] = self.Hb
+            ############
         self.N = self.nb_inferences
         self.p_a = np.dot(self.p_decision,self.p_actions)
-        self.q_values = np.dot(self.p_decision,q_values)
+        # self.q_values = np.dot(self.p_decision,self.q_values)
         self.value[ind] = float(np.log(self.p_a[self.current_action]))        
         self.reaction[ind] = float(np.sum(reaction*np.round(self.p_decision.flatten(),3)))    
             
@@ -611,7 +619,9 @@ class CSelection():
                             'alpha':[0.0, 1.0],
                             "beta":[0.0, 100.0], # QLEARNING
                             "sigma":[0.0, 20.0], 
-                            "weight":[0.0, 1.0]})
+                            "weight":[0.0, 1.0],
+                            "kappa":[0.0, 1.0],
+                            "shift":[-20.0, 20.0]})
                             
                             
 
@@ -773,10 +783,13 @@ class CSelection():
         self.p = self.uniform[:,:,:]
         self.Hb = self.max_entropy
         self.nb_inferences = 0     
-        # print self.Hb, self.parameters['threshold'], self.nb_inferences, self.n_element
+        self.evolution_entropy = np.zeros(int(self.parameters['length'])+1)
+        self.evolution_entropy[0] = self.Hb        
+
         while self.Hb > self.parameters['threshold'] and self.nb_inferences < self.n_element:            
             self.inferenceModule()
-            self.evaluationModule()                    
+            self.evaluationModule()            
+            self.evolution_entropy[self.nb_inferences] = self.Hb
         
         self.fusionModule()
         # print ind, self.p_a

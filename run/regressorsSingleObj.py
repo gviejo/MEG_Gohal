@@ -84,7 +84,8 @@ for s in subjects:
 models = front.pareto.keys()
 for s in subjects:
 	# os.system("mkdir matlab/"+s)
-	for m in front.data.keys():	
+	# for m in front.data.keys():		
+	for m in ['fusion']:
 		print s, m
 		data = np.zeros(4, dtype = {'names':variables[m], 'formats':['O']*len(variables[m])})						
 		parameters = best_parameters[s][m]
@@ -103,14 +104,14 @@ for s in subjects:
 				
 				data[i]['p_a'].append(front.models[m].p_a.copy())
 				data[i]['Q'].append(front.models[m].q_values.copy())
-				if m is 'fusion':
-					data[i]['p_sig'].append(front.models[m].p_sigmoide)
+
+				if m == 'fusion':					
+					data[i]['p_sig'].append(front.models[m].p_sigmoide.copy())
 					data[i]['p_ret'].append(front.models[m].p_retrieval)
 					data[i]['p_dec'].append(front.models[m].p_decision)
 					data[i]['p_at'].append(front.models[m].p_actions)
-				if 'N' in variables[m]:
-					data[i]['N'].append(front.models[m].N)
-					data[i]['Hb'].append(front.models[m].Hb)
+				if 'Hb' in variables[m]:					
+					data[i]['Hb'].append(front.models[m].evolution_entropy)
 				if 'delta' in variables[m]:
 					data[i]['delta'].append(front.models[m].delta)
 					data[i]['Hf'].append(front.models[m].Hf)					
@@ -123,6 +124,6 @@ for s in subjects:
 			for v in variables[m]:
 				data[i][v] = np.array(data[i][v])		
 		# SAVING		
-		sio.savemat("matlab/"+s+"/"+m+".mat", {m : data}, oned_as='column')	
-		# sio.savemat(os.path.expanduser("~/Dropbox/PEPS_GoHaL/Beh_Model/"+s+"/"+m+".mat"), {m : data}, oned_as='column')
+		# sio.savemat("matlab/"+s+"/"+m+".mat", {m : data}, oned_as='column')	
+		sio.savemat(os.path.expanduser("~/Dropbox/PEPS_GoHaL/Beh_Model/"+s+"/"+m+".mat"), {m : data}, oned_as='column')
 
