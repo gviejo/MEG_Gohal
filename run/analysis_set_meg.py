@@ -62,7 +62,19 @@ models_set = dict({'fusion':
 				'selection':
 					{1:selection_1(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1,"eta":0.0001}, 0.05, 10, 0.1, True)}
 			})
-
+nb_parameters[m][p] = dict({'fusion':{		1:8,
+											2:9,
+											3:9,
+											4:10	},
+							'mixture':{		1:7,
+											2:8,
+											3:8,
+											4:9		},
+							'bayesian':{	1:4		},
+							'qlearning':{	1:3,
+											2:4		},
+							'selection':{	1:7		}
+							})
 
 # -----------------------------------
 # LOADING DATA
@@ -140,16 +152,13 @@ for s in sujet:
 			pareto[s][p][id_to_models[m]][:,3] = pareto[s][p][id_to_models[m]][:,3] - 2000.0
 			pareto[s][p][id_to_models[m]][:,4] = pareto[s][p][id_to_models[m]][:,4] - 500.0            
 			# bic
-			# pareto[s][p][id_to_models[m]][:,3] = 2*pareto[s][p][id_to_models[m]][:,3] - float(len(p_order[id_to_models[m]]))*np.log(front.N)
+			pareto[s][p][id_to_models[m]][:,3] = 2*pareto[s][p][id_to_models[m]][:,3] - nb_parameters[m][p]*np.log(front.N)
 			# best_bic = 2*best_log - float(len(p_order[id_to_models[m]]))*np.log(front.N)			
 			# worst_bic = 2*worst_log - float(len(p_order[id_to_models[m]]))*np.log(front.N)                    
 			# pareto[s][p][id_to_models[m]][:,3] = (pareto[s][p][id_to_models[m]][:,3]-worst_bic)/(best_bic-worst_bic)			
 			# r2
-			pareto[s][p][id_to_models[m]][:,3] = 1.0 - (pareto[s][p][id_to_models[m]][:,3]/(front.N*np.log(0.2)))
+			# pareto[s][p][id_to_models[m]][:,3] = 1.0 - (pareto[s][p][id_to_models[m]][:,3]/(front.N*np.log(0.2)))
 			# rt
-			# if s == 'p':
-			# 	pareto[s][p][id_to_models[m]][:,4] = 1.0 - ((-pareto[s][p][id_to_models[m]][:,4])/(8.0*np.power(2.0*front.rt_reg_monkeys[s][:,1], 2).sum()))
-			# else :
 			pareto[s][p][id_to_models[m]][:,4] = 1.0 - ((-pareto[s][p][id_to_models[m]][:,4])/(2.0*np.power(2.0*front.human[s]['mean'][0], 2).sum()))
 	
 # --------------------------------------
