@@ -24,10 +24,19 @@ from Selection import *
 #from matplotlib import *
 #from pylab import *
 
-from Sferes import pareto
+from Sferes import pareto, EA
 from itertools import *
 from time import sleep
 import cPickle as pickle
+
+sys.path.append("set_meg_models")
+from fusion_2 import fusion_2
+from mixture_2 import mixture_2
+from selection_1 import selection_1
+from fusion_4 import fusion_4
+from mixture_4 import mixture_4
+
+
 
 p_order = dict({'fusion':['alpha','beta', 'noise','length', 'gain', 'threshold', 'gamma', 'sigma', 'kappa', 'shift'], 
 					'qlearning':['alpha','beta', 'sigma', 'kappa', 'shift'],
@@ -39,10 +48,20 @@ p_order = dict({'fusion':['alpha','beta', 'noise','length', 'gain', 'threshold',
 front = pareto("", 'meg') # dummy for rt
 
 models = dict({ "fusion" 	:	FSelection				(front.states, front.actions),
-                "qlearning"	:	QLearning				(front.states, front.actions),
-                "bayesian"	:	BayesianWorkingMemory	(front.states, front.actions),
-                "selection"	:	KSelection				(front.states, front.actions),
-                "mixture"	:	CSelection				(front.states, front.actions)})
+				"qlearning"	:	QLearning				(front.states, front.actions),
+				"bayesian"	:	BayesianWorkingMemory	(front.states, front.actions),
+				"selection"	:	KSelection				(front.states, front.actions),
+				"mixture"	:	CSelection				(front.states, front.actions)})
+
+models_set = dict({'fusion':
+					{2:fusion_2(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True),
+					 4:fusion_4(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True)},
+				'mixture': 
+					{2:mixture_2(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
+					 4:mixture_4(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True)},
+				'selection':
+					{1:selection_1(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1,"eta":0.0001}, 0.05, 10, 0.1, True)}
+			})
 
 
 # -----------------------------------
@@ -71,12 +90,13 @@ data = {}
 pareto = {}
 pareto2 = {}
 pareto3 = {}
+pareto4 = {}
 p_test = {}
 p_test2 = {}
 tche = {}
 indd = {}
 position = {}
-
+timing = {}
 #------------------------------------
 # best log/rt
 #------------------------------------
@@ -173,7 +193,8 @@ for s in sujet:
 # TCHEBYTCHEV
 # -------------------------------------	
 	tmp = pareto3[s][:,5:]
-	tmp = tmp[(tmp[:,0]>0)*(tmp[:,1]>0)]
+	positif = (tmp[:,0]>0)*(tmp[:,1]>0)
+	tmp = tmp[positif]
 	ideal = np.max(tmp, 0)
 	nadir = np.min(tmp, 0)
 	value = 0.5*((ideal-tmp)/(ideal-nadir))
@@ -181,7 +202,7 @@ for s in sujet:
 	tche[s] = value
 	ind_best_point = np.argmin(value)
 	# Saving best individual
-	best_ind = pareto3[s][ind_best_point]
+	best_ind = pareto3[s][positif][ind_best_point]
 	indd[s] = best_ind	
 	
 	
@@ -197,50 +218,91 @@ for s in sujet:
 	print "run ", run_
 	print "gen ", gen_
 	print "num ", num_
-	print "model" , m
+	print "model" , m	
 
 	data_run = data[s][set_][m][run_]
 	tmp = data_run[(data_run[:,0] == gen_)*(data_run[:,1] == num_)][0]
 	p_test[s+str(set_)] = dict({m:dict(zip(p_order[m],tmp[4:]))})                        
 	position[s+str(set_)] = best_ind[5:]
-
-# ------------------------------------
-# BEST RT
-# ------------------------------------
-	index = (pareto3[s][:,5] > 0)*(pareto3[s][:,6] > 0)
-	tmp = pareto3[s][index,:]
-	best_ind = tmp[-1]
-	m = id_to_models[int(best_ind[0])]
-	set_ = int(best_ind[1])
-	run_ = int(best_ind[2])
-	gen_ = int(best_ind[3])
-	num_ = int(best_ind[4])
-
-	# print s
-	# print "set ", set_
-	# print "run ", run_
-	# print "gen ", gen_
-	# print "num ", num_
-	# print "model" , m
-
-	data_run = data[s][set_][m][run_]
-	tmp = data_run[(data_run[:,0] == gen_)*(data_run[:,1] == num_)][0]
-	p_test2[s+str(set_)] = dict({m:dict(zip(p_order[m],tmp[4:]))})
+# -----------------------------------
+# CHECKING PYTHON MODELS + SAVING RT TIMING
+# -----------------------------------	
+	print "from sferes :", tmp[2]-2000, tmp[3]-500
+	timing [s] = dict({})
+	model = models_set[m][set_]
+	model.setAllParameters(p_test[s+str(set_)][m])	
+	with open("meg/"+s+".pickle", "rb") as f:
+		data = pickle.load(f)
+	opt = EA(data, s, model)                                
+	for i in xrange(opt.n_blocs):
+	    opt.model.startBloc()
+	    for j in xrange(opt.n_trials):
+	        opt.model.computeValue(opt.state[i,j]-1, opt.action[i,j]-1, (i,j))
+	        opt.model.updateValue(opt.responses[i,j])
+	opt.fit[0] = float(np.sum(opt.model.value))
+	timing[s][m] = [np.median(opt.model.reaction)]
+	opt.model.reaction = opt.model.reaction - np.median(opt.model.reaction)
+	timing[s][m].append(np.percentile(opt.model.reaction, 75)-np.percentile(opt.model.reaction, 25))
+	opt.model.reaction = opt.model.reaction / (np.percentile(opt.model.reaction, 75)-np.percentile(opt.model.reaction, 25))        
+	timing[s][m] = np.array(timing[s][m])
+	opt.fit[1] = float(-opt.leastSquares())
 	
+	print "from test   :", opt.fit[0], opt.fit[1], "\n"
+	
+# # ------------------------------------
+# # BEST RT
+# # ------------------------------------
+# 	index = (pareto3[s][:,5] > 0)*(pareto3[s][:,6] > 0)
+# 	tmp = pareto3[s][index,:]
+# 	best_ind = tmp[-1]
+# 	m = id_to_models[int(best_ind[0])]
+# 	set_ = int(best_ind[1])
+# 	run_ = int(best_ind[2])
+# 	gen_ = int(best_ind[3])
+# 	num_ = int(best_ind[4])
+
+# 	# print s
+# 	# print "set ", set_
+# 	# print "run ", run_
+# 	# print "gen ", gen_
+# 	# print "num ", num_
+# 	# print "model" , m
+
+# 	data_run = data[s][set_][m][run_]
+# 	tmp = data_run[(data_run[:,0] == gen_)*(data_run[:,1] == num_)][0]
+# 	p_test2[s+str(set_)] = dict({m:dict(zip(p_order[m],tmp[4:]))})
+	
+# -------------------------------------
+# PARETO SET 1 
+# -------------------------------------
+# pareto 4 = model | run | gen 
+	tmp = []
+	for m in pareto[s][1].iterkeys():		
+		tmp.append(np.hstack((np.ones((len(pareto[s][1][m]),1))*models_to_id[m], pareto[s][1][m][:,0:5])))            	
+	tmp = np.vstack(tmp)
+	tmp = tmp[tmp[:,4].argsort()][::-1]                        
+	if len(tmp):
+		pareto4[s] = []
+		pareto4[s] = [tmp[0]]
+		for pair in tmp[1:]:
+			if pair[5] >= pareto4[s][-1][5]:
+				pareto4[s].append(pair)
+		pareto4[s] = np.array(pareto4[s])  
 
 
-
-# SAVING IN DROPBOX
-# with open("/home/viejo/Dropbox/Manuscrit/Chapitre5/monkeys/pareto2.pickle", 'wb') as f:
-# 	pickle.dump(pareto2, f)
-# with open("/home/viejo/Dropbox/Manuscrit/Chapitre5/monkeys/pareto3.pickle", 'wb') as f:
-# 	pickle.dump(pareto3, f)
-# with open("/home/viejo/Dropbox/Manuscrit/Chapitre5/monkeys/position.pickle", 'wb') as f:
-# 	pickle.dump(position, f)
+with open("pareto2.pickle", 'wb') as f:
+	pickle.dump(pareto2, f)
+with open("pareto3.pickle", 'wb') as f:
+	pickle.dump(pareto3, f)
+with open("pareto4.pickle", 'wb') as f:
+	pickle.dump(pareto4, f)	
+with open("position.pickle", 'wb') as f:
+	pickle.dump(position, f)
 
 with open("p_test_last_set.pickle", 'wb') as f:
 	pickle.dump(p_test, f)
 with open("p_test2_last_set.pickle", 'wb') as f:
 	pickle.dump(p_test2, f)
-
+with open("timing.pickle", 'wb') as f:
+	pickle.dump(timing, f)
 

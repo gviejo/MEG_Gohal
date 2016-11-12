@@ -18,7 +18,7 @@ import sys
 import os
 import mmap
 import numpy as np
-if os.uname()[1] in ['atlantis', 'paradise']:
+if os.uname()[1] in ['paradise']:
     from multiprocessing import Pool, Process
     from pylab import *
 

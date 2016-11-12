@@ -21,7 +21,7 @@ def convertAction(action):
 
 
 
-class CSelection():
+class mixture_2():
     """Class that implement Collins models for action selection
     Model-based must be provided
     Specially tuned for Brovelli experiment so beware
@@ -88,6 +88,7 @@ class CSelection():
             self.pdf = list()
             self.Hall = list()
             self.pdf = list()
+            self.update = list()
 
 
     def setParameters(self, name, value):            
@@ -114,6 +115,7 @@ class CSelection():
             self.p_rl.append([])
             self.Hall.append([])
             self.pdf.append([])
+            self.update.append([])
         self.n_element = 0
         self.p_s = np.zeros((int(self.parameters['length']), self.n_state))
         self.p_a_s = np.zeros((int(self.parameters['length']), self.n_state, self.n_action))
@@ -143,6 +145,7 @@ class CSelection():
         self.p_rl=list()
         self.Hall=list()
         self.pdf=list()
+        self.update=list()
 
     def sample(self, values):
         tmp = [np.sum(values[0:i]) for i in range(len(values))]
@@ -167,18 +170,23 @@ class CSelection():
 
     def fusionModule(self):
         np.seterr(invalid='ignore')
-        self.p_a_mf = np.exp(self.q_mf[self.current_state]*float(self.parameters['beta']))
-        self.p_a_mf = self.p_a_mf/np.sum(self.p_a_mf)
+        self.p_a_mf = SoftMaxValues(self.q_mf[self.current_state], float(self.parameters['beta']))
         self.Hf = -(self.p_a_mf*np.log2(self.p_a_mf)).sum()
         self.p_a = (1.0-self.w[self.current_state])*self.p_a_mf + self.w[self.current_state]*self.p_a_mb                
-        self.q_values = self.p_a      
+    
+        ninf = np.isinf(self.p_a).sum()        
 
-        #nombre de inf
-        ninf = np.isinf(self.p_a).sum()  
-        if np.isinf(self.p_a).sum():
-            self.p_a = np.isinf(tmp)*((1.0/float(ninf))-ninf*0.0000001-0.0000001/ninf) + 0.0000001
+        if ninf:
+            print "INF"
+        if np.isinf(self.p_a).sum():            
+            self.p_a = np.isinf(self.p_a)*((1.0/float(ninf))-ninf*0.0000001-0.0000001/ninf) + 0.0000001
         else :
             self.p_a = self.p_a/np.sum(self.p_a)   
+        
+        if np.sum(self.p_a == 0.0):
+            self.p_a+=1e-8;
+            self.p_a = self.p_a/self.p_a.sum()  
+
         
         if not self.sferes:
             # qlearning
@@ -251,6 +259,7 @@ class CSelection():
         r = int((reward==1)*1)
         if not self.sferes:
             self.responses[-1].append(r)        
+            self.update[-1].append(1.0)
         # Specific to Collins model
         self.updateWeight(float(r))
         if self.parameters['noise']:
@@ -276,7 +285,6 @@ class CSelection():
         # delta = float(r)+self.parameters['gamma']*np.max(self.q_mf[self.current_state])-self.q_mf[self.current_state, self.current_action]                
         self.delta = float(r)-self.q_mf[self.current_state, self.current_action]                        
         self.q_mf[self.current_state, self.current_action] = self.q_mf[self.current_state, self.current_action]+self.parameters['alpha']*self.delta
-        # if r>0:        
-        #     self.q_mf[self.current_state, self.current_action] = self.q_mf[self.current_state, self.current_action]+self.parameters['alpha']*delta
-        # elif r<=0:
-        #     self.q_mf[self.current_state, self.current_action] = self.q_mf[self.current_state, self.current_action]+self.parameters['omega']*delta                    
+        index = range(self.n_action)
+        index.pop(int(self.current_action))        
+        self.q_mf[self.current_state][index] = self.q_mf[self.current_state][index] + (1.0-self.parameters['kappa']) * (0.0 - self.q_mf[self.current_state][index])            

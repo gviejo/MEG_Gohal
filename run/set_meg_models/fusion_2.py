@@ -85,6 +85,7 @@ class fusion_2():
 			self.value = list()
 			self.pdf = list()
 			self.Hall = list()
+			self.update = list()
 			# prediction
 			self.h_bayes_only = 0.0
 			self.h_ql_only = 0.0
@@ -110,6 +111,7 @@ class fusion_2():
 			self.reaction.append([])
 			self.pdf.append([])
 			self.Hall.append([])
+			self.update.append([])
 		self.p_s = np.zeros((int(self.parameters['length']), self.n_state))
 		self.p_a_s = np.zeros((int(self.parameters['length']), self.n_state, self.n_action))
 		self.p_r_as = np.zeros((int(self.parameters['length']), self.n_state, self.n_action, 2))
@@ -131,6 +133,7 @@ class fusion_2():
 		self.value = list()        
 		self.pdf = list()
 		self.Hall = list()
+		self.update = list()
 
 	def sample(self, values):
 		tmp = [np.sum(values[0:i]) for i in range(len(values))]
@@ -160,8 +163,7 @@ class fusion_2():
 	def fusionModule(self):
 		np.seterr(invalid='ignore')
 		self.values_net = self.p_a_mb+self.values_mf[self.current_state]
-		tmp0 = self.values_net - np.max(self.values_net)
-		tmp = np.exp(tmp0*float(self.parameters['beta']))
+		tmp = SoftMaxValues(self.values_net, float(self.parameters['beta']))
 		
 		ninf = np.isinf(tmp).sum()        
 
@@ -277,6 +279,7 @@ class fusion_2():
 		r = int((reward==1)*1)
 		if not self.sferes:
 			self.responses[-1].append(r)
+			self.update[-1].append(1.0)
 		if self.parameters['noise']:
 			self.p_s = self.p_s*(1-self.parameters['noise'])+self.parameters['noise']*(1.0/self.n_state*np.ones(self.p_s.shape))
 			self.p_a_s = self.p_a_s*(1-self.parameters['noise'])+self.parameters['noise']*(1.0/self.n_action*np.ones(self.p_a_s.shape))
