@@ -62,7 +62,7 @@ models_set = dict({'fusion':
 				'selection':
 					{1:selection_1(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1,"eta":0.0001}, 0.05, 10, 0.1, True)}
 			})
-nb_parameters[m][p] = dict({'fusion':{		1:8,
+nb_parameters = dict({'fusion':{		1:8,
 											2:9,
 											3:9,
 											4:10	},
@@ -152,10 +152,10 @@ for s in sujet:
 			pareto[s][p][id_to_models[m]][:,3] = pareto[s][p][id_to_models[m]][:,3] - 2000.0
 			pareto[s][p][id_to_models[m]][:,4] = pareto[s][p][id_to_models[m]][:,4] - 500.0            
 			# bic
-			pareto[s][p][id_to_models[m]][:,3] = 2*pareto[s][p][id_to_models[m]][:,3] - nb_parameters[m][p]*np.log(front.N)
-			# best_bic = 2*best_log - float(len(p_order[id_to_models[m]]))*np.log(front.N)			
-			# worst_bic = 2*worst_log - float(len(p_order[id_to_models[m]]))*np.log(front.N)                    
-			# pareto[s][p][id_to_models[m]][:,3] = (pareto[s][p][id_to_models[m]][:,3]-worst_bic)/(best_bic-worst_bic)			
+			pareto[s][p][id_to_models[m]][:,3] = 2*pareto[s][p][id_to_models[m]][:,3] - float(nb_parameters[id_to_models[m]][p]*np.log(front.N))
+			best_bic = 2*best_log - float(nb_parameters[id_to_models[m]][p]*np.log(front.N))
+			worst_bic = 2*worst_log - float(nb_parameters[id_to_models[m]][p]*np.log(front.N))                  
+			pareto[s][p][id_to_models[m]][:,3] = (pareto[s][p][id_to_models[m]][:,3]-worst_bic)/(best_bic-worst_bic)			
 			# r2
 			# pareto[s][p][id_to_models[m]][:,3] = 1.0 - (pareto[s][p][id_to_models[m]][:,3]/(front.N*np.log(0.2)))
 			# rt
@@ -236,27 +236,27 @@ for s in sujet:
 # -----------------------------------
 # CHECKING PYTHON MODELS + SAVING RT TIMING
 # -----------------------------------	
-	print "from sferes :", tmp[2]-2000, tmp[3]-500
-	timing [s] = dict({})
-	model = models_set[m][set_]
-	model.setAllParameters(p_test[s+str(set_)][m])	
-	with open("meg/"+s+".pickle", "rb") as f:
-		data = pickle.load(f)
-	opt = EA(data, s, model)                                
-	for i in xrange(opt.n_blocs):
-	    opt.model.startBloc()
-	    for j in xrange(opt.n_trials):
-	        opt.model.computeValue(opt.state[i,j]-1, opt.action[i,j]-1, (i,j))
-	        opt.model.updateValue(opt.responses[i,j])
-	opt.fit[0] = float(np.sum(opt.model.value))
-	timing[s][m] = [np.median(opt.model.reaction)]
-	opt.model.reaction = opt.model.reaction - np.median(opt.model.reaction)
-	timing[s][m].append(np.percentile(opt.model.reaction, 75)-np.percentile(opt.model.reaction, 25))
-	opt.model.reaction = opt.model.reaction / (np.percentile(opt.model.reaction, 75)-np.percentile(opt.model.reaction, 25))        
-	timing[s][m] = np.array(timing[s][m])
-	opt.fit[1] = float(-opt.leastSquares())
+	# print "from sferes :", tmp[2]-2000, tmp[3]-500
+	# timing [s] = dict({})
+	# model = models_set[m][set_]
+	# model.setAllParameters(p_test[s+str(set_)][m])	
+	# with open("meg/"+s+".pickle", "rb") as f:
+	# 	data = pickle.load(f)
+	# opt = EA(data, s, model)                                
+	# for i in xrange(opt.n_blocs):
+	#     opt.model.startBloc()
+	#     for j in xrange(opt.n_trials):
+	#         opt.model.computeValue(opt.state[i,j]-1, opt.action[i,j]-1, (i,j))
+	#         opt.model.updateValue(opt.responses[i,j])
+	# opt.fit[0] = float(np.sum(opt.model.value))
+	# timing[s][m] = [np.median(opt.model.reaction)]
+	# opt.model.reaction = opt.model.reaction - np.median(opt.model.reaction)
+	# timing[s][m].append(np.percentile(opt.model.reaction, 75)-np.percentile(opt.model.reaction, 25))
+	# opt.model.reaction = opt.model.reaction / (np.percentile(opt.model.reaction, 75)-np.percentile(opt.model.reaction, 25))        
+	# timing[s][m] = np.array(timing[s][m])
+	# opt.fit[1] = float(-opt.leastSquares())
 	
-	print "from test   :", opt.fit[0], opt.fit[1], "\n"
+	# print "from test   :", opt.fit[0], opt.fit[1], "\n"
 	
 # # ------------------------------------
 # # BEST RT
@@ -298,6 +298,7 @@ for s in sujet:
 				pareto4[s].append(pair)
 		pareto4[s] = np.array(pareto4[s])  
 
+	sleep(10)
 
 with open("pareto2.pickle", 'wb') as f:
 	pickle.dump(pareto2, f)
