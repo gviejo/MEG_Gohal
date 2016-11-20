@@ -13,14 +13,16 @@ from mplothelper import MPlotHelper
 import matplotlib.pyplot as plt
 import os
 
-with open("pareto2.pickle", 'rb') as handle:
+with open("../pareto2.pickle", 'rb') as handle:
 	data = pickle.load(handle)
-with open("pareto3.pickle", 'rb') as handle:
+with open("../pareto3.pickle", 'rb') as handle:
 	mixed_front = pickle.load(handle)    
-with open("pareto4.pickle", 'rb') as handle:
+with open("../pareto4.pickle", 'rb') as handle:
 	first_front = pickle.load(handle)
-with open("position.pickle", 'rb') as handle:
+with open("../position.pickle", 'rb') as handle:
 	pos = pickle.load(handle)
+with open("../p_test_last_set.pickle", 'rb') as handle:
+	p_test = pickle.load(handle)
 tmp = {}
 for k in pos.iterkeys():
 	tmp[k[0:-1]] = pos[k]
@@ -39,7 +41,8 @@ cpsize = 1.1
 # subplot_size = (390,280)
 # subplot_interspace = (100, 80)
 # subplot_margin = (100,100)
-figure_size = (6378,9000) # In pixels
+# figure_size = (6378,9000) # In pixels
+figure_size = (9000,6700) # In pixels
 subplot_size = (1600,1700)
 subplot_interspace = (380, 320)
 subplot_margin = (500,300)
@@ -75,8 +78,8 @@ legend_m = dict({'fusion':r'$Coordination\ par\ Entropie$',
 				'mixture': r'$M\acute{e}lange\ pond\acute{e}r\acute{e}$'})
 
 positions = []
-for i in np.arange(0,1,0.25)[::-1]:
-	for j in np.arange(0,1,0.34):
+for i in np.arange(0,1,0.34)[::-1]:
+	for j in np.arange(0,1,0.25):
 		positions.append([j,i])
 
 positions = np.array(positions)
@@ -159,16 +162,24 @@ for i in xrange(n_subjects):
 	
 	ax1.set_xlabel("$Choix$", fontsize = 8, labelpad = 2)
 	ax1.set_ylabel(r"$Temps\ de\ r\acute{e}action$", fontsize = 8, labelpad = 2)
-	ax1.set_title(subjects[i], y = 0.98)
+
+	# make title with set name
+	s = subjects[i]
+	set_ = 0
+	for t in p_test.keys():
+		if s == t[0:-1]:
+			set_ = t[-1]
+			break
+	ax1.set_title(subjects[i]+" version "+set_, y = 0.98)
 
 
 line2 = tuple([plt.Line2D(range(1),range(1),alpha=1.0,color=colors_m[m], linewidth = 2) for m in colors_m.keys()])
 plt.figlegend(line2,tuple(legend_m.values()), loc = 'lower right', bbox_to_anchor = (0.999, 0.05))
 line3 = tuple([plt.Line2D(range(1),range(1), linestyle = '', marker = markers[i], alpha=1.0, markerfacecolor = 'white', color='black') for i in xrange(len(markers))])
-plt.figlegend(line3,tuple(["Variation "+str(i+1) for i in xrange(5)]), loc = 'lower right', bbox_to_anchor = (0.84, 0.15))
+plt.figlegend(line3,tuple(["Version "+str(i+1) for i in xrange(5)]), loc = 'lower right', bbox_to_anchor = (0.86, 0.2))
 
 
 
 plt.savefig('figure_set_meg_pareto.pdf')
-
+plt.savefig('../../../Dropbox/Soutenance/Slides/figures/figure_set_meg_pareto.pdf')
 

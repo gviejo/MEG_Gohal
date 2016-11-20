@@ -25,6 +25,8 @@ import pickle
 import matplotlib.pyplot as plt
 
 sys.path.append("set_meg_models")
+from fusion_1 import fusion_1
+from mixture_1 import mixture_1
 from fusion_2 import fusion_2
 from mixture_2 import mixture_2
 from selection_1 import selection_1
@@ -68,13 +70,15 @@ def center(x, s, m):
 # MODELS 
 # -----------------------------------
 models = dict({'fusion':
-                    {'2':fusion_2(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little']),
-                    '4':fusion_4(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'])},
+                    {   '1':fusion_1(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True),
+                        '2':fusion_2(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True),
+                        '4':fusion_4(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True)},
                 'mixture': 
-                    {'2':mixture_2(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little']),
-                    '4':mixture_4(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'])},
+                    {   '1':mixture_1(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
+                        '2':mixture_2(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
+                        '4':mixture_4(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True)},
                 'selection':
-                    {'1':selection_1(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'])}
+                    {'1':selection_1(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1,"eta":0.0001}, 0.05, 10, 0.1, True)}
             })
 
 # -----------------------------------
@@ -89,12 +93,17 @@ human = HLearning(dict({'meg':('../PEPS_GoHaL/Beh_Model/',48), 'fmri':('../PEPS_
 cats = CATS(nb_trials)
 
 # ------------------------------------
-# Parameter testing
+# Parameter testing change here
 # ------------------------------------
-with open("p_test_last_set.pickle", 'r') as f:
+# with open("p_test_last_set_v1.pickle", 'rb') as f:
+#     p_test = pickle.load(f)
+# with open("timing_v1.pickle", 'rb') as f:
+#     timing = pickle.load(f)
+with open("p_test_last_set.pickle", 'rb') as f:
     p_test = pickle.load(f)
 with open("timing.pickle", 'rb') as f:
     timing = pickle.load(f)
+
 
 super_data = dict()
 super_rt = dict({'model':[]})
@@ -108,7 +117,7 @@ for s in p_test.iterkeys():
     with open("meg/"+s[0:-1]+".pickle", 'rb') as f:
         data = pickle.load(f)
     m = p_test[s].keys()[0] 
-    print s, m       
+    print s, m, s[-1]       
     model = models[m][s[-1]]
     model.__init__(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], p_test[s][m])        
     model.startExp()
@@ -168,16 +177,25 @@ ht = ht.reshape(len(human.subject[case])*4, nb_trials)
 step, indice = getRepresentativeSteps(ht, human.stimulus[case], human.action[case], human.responses[case], case)
 rt_fmri = computeMeanRepresentativeSteps(step) 
 
-# #SAVING DATA
-# data2 = dict()
-# data2['pcr'] = dict({'model':pcr_model,case:pcr_human})
-# data2['rt'] = dict({'model':rt,case:rt_fmri})
-# data2['s'] = dict()
-# for i, s in zip(xrange(len(p_test[o].keys())), p_test[o].keys()):
-#     data2['s'][s] = dict()
-#     data2['s'][s]['m'] = hrtm[i]
-#     data2['s'][s]['h'] = hrt[i]
+#SAVING DATA
+data2 = dict()
+data2['pcr'] = dict({'model':pcr_model,case:pcr_human})
+data2['rt'] = dict({'model':rt,case:rt_fmri})
+data2['s'] = dict()
+for i, s in zip(xrange(len(p_test.keys())), p_test.keys()):
+    data2['s'][s] = dict()
+    data2['s'][s]['m'] = hrtm[i]
+    data2['s'][s]['h'] = hrt[i]
 
+###############################################
+# TO CHANGE HERE 
+###############################################
+
+# with open("beh_model_v1.pickle", 'wb') as handle:
+#     pickle.dump(data2, handle)
+
+with open("beh_model.pickle", 'wb') as handle:
+    pickle.dump(data2, handle)    
 
 
 fig = figure(figsize = (12, 5))
