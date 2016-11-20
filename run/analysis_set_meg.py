@@ -147,6 +147,11 @@ for s in sujet:
 				data[s][p][id_to_models[m]][r] = np.genfromtxt("set_meg/set_"+str(p)+"_"+str(m)+"/sferes_"+id_to_models[m]+"_meg_inserm_"+s+"_"+str(r)+"_"+str(p)+".dat")
 				order = p_order[id_to_models[m]]
 				scale = models[id_to_models[m]].bounds
+				######################### VERY BAD ################# 
+				# But must add exception for set 5 since 1 more parameters made after the run of the others
+				####################################################
+				if p != 5:
+					order = order[0:-1]
 				for i in order:
 					data[s][p][id_to_models[m]][r][:,order.index(i)+4] = scale[i][0]+data[s][p][id_to_models[m]][r][:,order.index(i)+4]*(scale[i][1]-scale[i][0])
 
@@ -243,7 +248,11 @@ for s in sujet:
 
 	data_run = data[s][set_][m][run_]
 	tmp = data_run[(data_run[:,0] == gen_)*(data_run[:,1] == num_)][0]
-	p_test[s+str(set_)] = dict({m:dict(zip(p_order[m],tmp[4:]))})                        
+	# CONDITION FOR SET 5
+	order = p_order[m]
+	if set_ != 5:
+		order = order[0:-1]
+	p_test[s+str(set_)] = dict({m:dict(zip(order,tmp[4:]))})                        
 	position[s+str(set_)] = best_ind[5:]
 # -----------------------------------
 # CHECKING PYTHON MODELS + SAVING RT TIMING
@@ -305,7 +314,11 @@ for s in sujet:
 	num_ = int(best_ind[3])
 	data_run = data[s][1][m][run_]
 	tmp = data_run[(data_run[:,0] == gen_)*(data_run[:,1] == num_)][0]
-	p_test_v1[s+str(1)] = dict({m:dict(zip(p_order[m],tmp[4:]))})                        
+	# CONDITION FOR SET 5
+	order = p_order[m]
+	if set_ != 5:
+		order = order[0:-1]	
+	p_test_v1[s+str(1)] = dict({m:dict(zip(order,tmp[4:]))})                        
 	
 # -----------------------------------
 # CHECKING PYTHON MODELS + SAVING RT TIMING for SET 1
