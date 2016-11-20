@@ -260,8 +260,7 @@ for s in sujet:
 	timing[s][m].append(np.percentile(opt.model.reaction, 75)-np.percentile(opt.model.reaction, 25))
 	opt.model.reaction = opt.model.reaction / (np.percentile(opt.model.reaction, 75)-np.percentile(opt.model.reaction, 25))        
 	timing[s][m] = np.array(timing[s][m])
-	opt.fit[1] = float(-opt.leastSquares())
-	
+	opt.fit[1] = float(-opt.leastSquares())	
 	print "from test   :", opt.fit[0], opt.fit[1], "\n"
 	
 # -------------------------------------
