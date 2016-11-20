@@ -187,6 +187,8 @@ for s in sujet:
 		for p in [1,2,3,4,5]:
 			if m in set_to_models[p]:
 				tmp[p] = pareto[s][p][id_to_models[m]]
+				# add a dummy columns for xi parameter
+				tmp[p] = np.hstack((tmp[p],np.ones((len(tmp[p]),1))))
 		tmp=np.vstack([np.hstack((np.ones((len(tmp[p]),1))*p,tmp[p])) for p in tmp.iterkeys()])			
 		ind = tmp[:,4] != 0
 		tmp = tmp[ind]
