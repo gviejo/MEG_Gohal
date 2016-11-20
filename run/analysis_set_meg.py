@@ -150,7 +150,7 @@ for s in sujet:
 				######################### VERY BAD ################# 
 				# But must add exception for set 5 since 1 more parameters made after the run of the others
 				####################################################
-				if p != 5:
+				if p in [1,2,3,4] and m in [1,2]:
 					order = order[0:-1]
 				for i in order:
 					data[s][p][id_to_models[m]][r][:,order.index(i)+4] = scale[i][0]+data[s][p][id_to_models[m]][r][:,order.index(i)+4]*(scale[i][1]-scale[i][0])
@@ -252,7 +252,7 @@ for s in sujet:
 	tmp = data_run[(data_run[:,0] == gen_)*(data_run[:,1] == num_)][0]
 	# CONDITION FOR SET 5
 	order = p_order[m]
-	if set_ != 5:
+	if set_ in [1,2,3,4] and m in ['fusion', 'mixture']:
 		order = order[0:-1]
 	p_test[s+str(set_)] = dict({m:dict(zip(order,tmp[4:]))})                        
 	position[s+str(set_)] = best_ind[5:]
@@ -318,7 +318,7 @@ for s in sujet:
 	tmp = data_run[(data_run[:,0] == gen_)*(data_run[:,1] == num_)][0]
 	# CONDITION FOR SET 5
 	order = p_order[m]
-	if set_ != 5:
+	if m in ['fusion', 'mixture']:
 		order = order[0:-1]	
 	p_test_v1[s+str(1)] = dict({m:dict(zip(order,tmp[4:]))})                        
 	
