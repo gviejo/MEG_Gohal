@@ -85,9 +85,29 @@ class EA():
         #return np.sum(np.power(self.errfunc(p[0], mean[1][0], mean[0][0]), 2))
 
     def alignToMedian(self):        
-        self.model.reaction = self.model.reaction - np.median(self.model.reaction)
-        self.model.reaction = self.model.reaction / (np.percentile(self.model.reaction, 75)-np.percentile(self.model.reaction, 25))        
+        # self.model.reaction = self.model.reaction - np.median(self.model.reaction)
+        # self.model.reaction = self.model.reaction / (np.percentile(self.model.reaction, 75)-np.percentile(self.model.reaction, 25))        
+        daArray = self.model.reaction.flatten()        
+        iSize = len(daArray)
+        dpSorted = np.zeros(iSize)
+        for i in xrange(iSize):
+            dpSorted[i] = daArray[i]
+        for i in np.arange(1, 192, 1)[::-1]:
+            for j in np.arange(0, i, 1):                
+                if dpSorted[j] > dpSorted[j+1]:
+                    dTemp = dpSorted[j]
+                    dpSorted[j] = dpSorted[j+1]
+                    dpSorted[j+1] = dTemp
+        dMedian = dpSorted[int((iSize/2)-1)]+(dpSorted[int(iSize/2)]-dpSorted[int((iSize/2)-1)])/2.0;    
+        for i in np.arange(0, iSize, 1):
+            daArray[i] = daArray[i]-dMedian
+            dpSorted[i] = dpSorted[i]-dMedian
 
+        dQ1 = dpSorted[int((iSize/4)-1)]+((dpSorted[int((iSize/4))]-dpSorted[int((iSize/4)-1)])/2.0);
+        dQ3 = dpSorted[int((iSize/4)*3-1)]+((dpSorted[int((iSize/4)*3+1)]-dpSorted[((iSize/4)*3-1)])/2.0);
+        for i in np.arange(0, iSize, 1):
+            daArray[i] = daArray[i]/(dQ3-dQ1)
+        self.model.reaction = daArray.reshape(self.n_blocs, self.n_trials)
 
 class RBM():
     """
