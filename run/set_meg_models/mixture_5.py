@@ -21,7 +21,7 @@ def convertAction(action):
 
 
 
-class mixture_4():
+class mixture_5():
     """Class that implement Collins models for action selection
 
     """

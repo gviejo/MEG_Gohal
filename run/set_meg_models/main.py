@@ -15,12 +15,12 @@ from Sferes import pareto, EA
 with open("../p_test_last_set.pickle", 'rb') as f:
 	p_test = pickle.load(f)
 
-model = fusion_4(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], p_test['S74']['fusion'], sferes = True)
+model = mixture_4(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], p_test['S94']['mixture'], sferes = True)
 
-with open("../meg/S7.pickle", "rb") as f:
+with open("../meg/S9.pickle", "rb") as f:
 	data = pickle.load(f)
 
-opt = EA(data, 'S7', model)                                
+opt = EA(data, 'S9', model)                                
 
 for i in xrange(opt.n_blocs):
 # for i in xrange(2):
@@ -33,5 +33,5 @@ for i in xrange(opt.n_blocs):
 opt.fit[0] = float(np.sum(opt.model.value))
 opt.alignToMedian()
 opt.fit[1] = float(-opt.leastSquares())                        
-# print opt.fit[0], opt.fit[1]
+print opt.fit[0], opt.fit[1]
 

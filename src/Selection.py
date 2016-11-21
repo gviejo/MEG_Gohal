@@ -42,7 +42,7 @@ class FSelection():
                             "sigma":[0.0, 20.0],
                             "gamma":[0.0, 100.0],
                             "kappa":[0.0, 1.0],
-                            "shift":[-20.0, 20.0]
+                            "shift":[-20.0, 20.0],			    
                             }) # temperature for entropy from qlearning soft-max
                             
 
@@ -622,6 +622,7 @@ class CSelection():
                             "weight":[0.0, 1.0],
                             "kappa":[0.0, 1.0],
                             "shift":[-20.0, 20.0]})
+				# "xi":[0.0, 20.0]})
                             
                             
 

@@ -21,7 +21,7 @@ def convertAction(action):
 
 
 
-class fusion_4():
+class fusion_5():
 	""" fusion strategy
 	
 	"""

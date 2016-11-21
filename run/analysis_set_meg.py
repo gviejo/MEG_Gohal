@@ -41,12 +41,16 @@ from fusion_5 import fusion_5
 from mixture_5 import mixture_5
 
 
-p_order = dict({'fusion':['alpha','beta', 'noise','length', 'gain', 'threshold', 'gamma', 'sigma', 'kappa', 'shift', 'xi'], 
+p_order = dict({'fusion':['alpha','beta', 'noise','length', 'gain', 'threshold', 'gamma', 'sigma', 'kappa', 'shift'], 
 					'qlearning':['alpha','beta', 'sigma', 'kappa', 'shift'],
 					'bayesian':['length','noise','threshold', 'sigma'],
 					'selection':['beta','eta','length','threshold','noise','sigma', 'sigma_rt'],
+					'mixture':['alpha', 'beta', 'noise', 'length', 'weight', 'threshold', 'sigma', 'kappa', 'shift']
+					}) 
+p_order_5 = dict({'fusion':['alpha','beta', 'noise','length', 'gain', 'threshold', 'gamma', 'sigma', 'kappa', 'shift', 'xi'], 
 					'mixture':['alpha', 'beta', 'noise', 'length', 'weight', 'threshold', 'sigma', 'kappa', 'shift', 'xi']
 					}) 
+
 
 front = pareto("", 'meg') # dummy for rt
 
@@ -64,25 +68,25 @@ models_set = dict({'fusion':
 				'mixture': 
 					{	1:mixture_1(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
 						2:mixture_2(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
-					 	4:mixture_4(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
-					 	5:mixture_5(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True)},
+						4:mixture_4(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
+						5:mixture_5(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True)},
 				'selection':
 					{1:selection_1(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1,"eta":0.0001}, 0.05, 10, 0.1, True)}
 			})
 nb_parameters = dict({'fusion':{		1:8,
-										2:9,
-										3:9,
-										4:10,
-										5:11	},
-						'mixture':{		1:7,
-										2:8,
-										3:8,
-										4:9,
-										5:10	},
-						'bayesian': {	1:4		},
-						'qlearning':{	1:3,
-										2:4		},
-						'selection':{	1:7		}
+											2:9,
+											3:9,
+											4:10,
+											5:11	},
+							'mixture':{		1:7,
+											2:8,
+											3:8,
+											4:9,
+											5:10		},
+							'bayesian':{	1:4		},
+							'qlearning':{	1:3,
+											2:4		},
+							'selection':{	1:7		}
 							})
 
 # -----------------------------------
@@ -145,15 +149,15 @@ for s in sujet:
 			pareto[s][p][id_to_models[m]] = dict()
 			for r in xrange(n_run):						
 				data[s][p][id_to_models[m]][r] = np.genfromtxt("set_meg/set_"+str(p)+"_"+str(m)+"/sferes_"+id_to_models[m]+"_meg_inserm_"+s+"_"+str(r)+"_"+str(p)+".dat")
-				order = p_order[id_to_models[m]]
-				scale = models[id_to_models[m]].bounds
-				######################### VERY BAD ################# 
-				# But must add exception for set 5 since 1 more parameters made after the run of the others
-				####################################################
-				if p in [1,2,3,4] and m in [1,2]:
-					order = order[0:-1]
+				if p in [1,2,3,4]:				
+					order = p_order[id_to_models[m]]
+					scale = models[id_to_models[m]].bounds
+				elif p in [5]:
+					order = p_order_5[id_to_models[m]]
+					scale = models_set[id_to_models[m]][p].bounds
 				for i in order:
 					data[s][p][id_to_models[m]][r][:,order.index(i)+4] = scale[i][0]+data[s][p][id_to_models[m]][r][:,order.index(i)+4]*(scale[i][1]-scale[i][0])
+
 
 			part = data[s][p][id_to_models[m]]
 			tmp={n:part[n][part[n][:,0]==np.max(part[n][:,0])] for n in part.iterkeys()}			
@@ -185,10 +189,10 @@ for s in sujet:
 		tmp = {}	
 		# for p in set_to_models.iterkeys():
 		for p in [1,2,3,4,5]:
-			if m in set_to_models[p]:
+			if m in set_to_models[p]:				
 				tmp[p] = pareto[s][p][id_to_models[m]]
-				# add a dummy columns for xi parameter
-				tmp[p] = np.hstack((tmp[p],np.ones((len(tmp[p]),1))))
+				if p in [1,2,3,4]: # VERY BAD
+					tmp[p] = np.hstack((tmp[p],np.ones((len(tmp[p]),1))))
 		tmp=np.vstack([np.hstack((np.ones((len(tmp[p]),1))*p,tmp[p])) for p in tmp.iterkeys()])			
 		ind = tmp[:,4] != 0
 		tmp = tmp[ind]
@@ -250,11 +254,14 @@ for s in sujet:
 
 	data_run = data[s][set_][m][run_]
 	tmp = data_run[(data_run[:,0] == gen_)*(data_run[:,1] == num_)][0]
-	# CONDITION FOR SET 5
-	order = p_order[m]
-	if set_ in [1,2,3,4] and m in ['fusion', 'mixture']:
-		order = order[0:-1]
-	p_test[s+str(set_)] = dict({m:dict(zip(order,tmp[4:]))})                        
+	if set_ in [1,2,3,4]:				
+		order = p_order[m]
+		p_test[s+str(set_)] = dict({m:dict(zip(order,tmp[4:]))})
+		# PROBLEM HERE                        
+	elif set_ in [5]:
+		order = p_order_5[m]
+		p_test[s+str(set_)] = dict({m:dict(zip(order,tmp[4:]))})                        
+
 	position[s+str(set_)] = best_ind[5:]
 # -----------------------------------
 # CHECKING PYTHON MODELS + SAVING RT TIMING
@@ -267,17 +274,18 @@ for s in sujet:
 		data2 = pickle.load(f)
 	opt = EA(data2, s, model)                                
 	for i in xrange(opt.n_blocs):
-	    opt.model.startBloc()
-	    for j in xrange(opt.n_trials):
-	        opt.model.computeValue(opt.state[i,j]-1, opt.action[i,j]-1, (i,j))
-	        opt.model.updateValue(opt.responses[i,j])
+		opt.model.startBloc()
+		for j in xrange(opt.n_trials):
+			opt.model.computeValue(opt.state[i,j]-1, opt.action[i,j]-1, (i,j))
+			opt.model.updateValue(opt.responses[i,j])
 	opt.fit[0] = float(np.sum(opt.model.value))
 	timing[s][m] = [np.median(opt.model.reaction)]
 	opt.model.reaction = opt.model.reaction - np.median(opt.model.reaction)
 	timing[s][m].append(np.percentile(opt.model.reaction, 75)-np.percentile(opt.model.reaction, 25))
 	opt.model.reaction = opt.model.reaction / (np.percentile(opt.model.reaction, 75)-np.percentile(opt.model.reaction, 25))        
 	timing[s][m] = np.array(timing[s][m])
-	opt.fit[1] = float(-opt.leastSquares())	
+	opt.fit[1] = float(-opt.leastSquares())
+	
 	print "from test   :", opt.fit[0], opt.fit[1], "\n"
 	
 # -------------------------------------
@@ -316,11 +324,7 @@ for s in sujet:
 	num_ = int(best_ind[3])
 	data_run = data[s][1][m][run_]
 	tmp = data_run[(data_run[:,0] == gen_)*(data_run[:,1] == num_)][0]
-	# CONDITION FOR SET 5
-	order = p_order[m]
-	if m in ['fusion', 'mixture']:
-		order = order[0:-1]	
-	p_test_v1[s+str(1)] = dict({m:dict(zip(order,tmp[4:]))})                        
+	p_test_v1[s+str(1)] = dict({m:dict(zip(p_order[m],tmp[4:]))})                        
 	
 # -----------------------------------
 # CHECKING PYTHON MODELS + SAVING RT TIMING for SET 1
@@ -333,10 +337,10 @@ for s in sujet:
 		data2 = pickle.load(f)
 	opt = EA(data2, s, model)                                
 	for i in xrange(opt.n_blocs):
-	    opt.model.startBloc()
-	    for j in xrange(opt.n_trials):
-	        opt.model.computeValue(opt.state[i,j]-1, opt.action[i,j]-1, (i,j))
-	        opt.model.updateValue(opt.responses[i,j])
+		opt.model.startBloc()
+		for j in xrange(opt.n_trials):
+			opt.model.computeValue(opt.state[i,j]-1, opt.action[i,j]-1, (i,j))
+			opt.model.updateValue(opt.responses[i,j])
 	opt.fit[0] = float(np.sum(opt.model.value))
 	timing_v1[s][m] = [np.median(opt.model.reaction)]
 	opt.model.reaction = opt.model.reaction - np.median(opt.model.reaction)
@@ -367,4 +371,3 @@ with open("timing.pickle", 'wb') as f:
 	pickle.dump(timing, f)
 with open("timing_v1.pickle", 'wb') as f:
 	pickle.dump(timing_v1, f)
-

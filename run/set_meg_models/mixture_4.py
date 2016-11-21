@@ -233,7 +233,7 @@ class mixture_4():
 
         self.value[ind] = float(np.log(self.p_a[self.current_action]))
         self.reaction[ind] = float((np.log2(float(self.nb_inferences+1))**self.parameters['sigma'])+H)        
-
+        # print self.reaction[ind], self.nb_inferences
         # print ind, self.value[ind]
 
     def chooseAction(self, state):

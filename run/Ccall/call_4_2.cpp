@@ -87,6 +87,12 @@ void sferes_call(double * fit, const int N, const char* data_dir, double alpha_,
 	double weight=0.0+(1.0-0.0)*weight_;
 	double kappa=0.0+(1.0-0.0)*kappa_;
 	double shift=-20.0+(20.0+20.0)*shift_;	
+
+	std::cout << "alpha = " << alpha << std::endl;
+	std::cout << "beta = " << beta << std::endl;
+	std::cout << "noise = " << noise << std::endl;
+	std::cout << "length = " << length << std::endl;
+	std::cout << "shift = " << shift << std::endl;
 	
 	int nb_trials = N/4;
 	int n_state = 3;
@@ -135,8 +141,8 @@ void sferes_call(double * fit, const int N, const char* data_dir, double alpha_,
 		}
 	data_file2.close();	
 	}		
-	// for (int i=0;i<4;i++)		
-	for (int i=0;i<2;i++) 
+	for (int i=0;i<4;i++)		
+	// for (int i=0;i<2;i++) 
 	{		
 		// START BLOC //
 		double p_s [length][n_state];
@@ -255,11 +261,11 @@ void sferes_call(double * fit, const int N, const char* data_dir, double alpha_,
 			values[j+i*nb_trials] = log(p_a[a]);
 			// std::cout << i << " " << j << " " << log(p_a[a]) << std::endl;
 			rt[j+i*nb_trials] = pow(log2(N), sigma) + H;
-			
+			std::cout << rt[j+i*nb_trials] << " " << nb_inferences << std::endl;
 			// UPDATE WEIGHT
 			double p_wmc;
 			double p_rl;
-			std::cout << r << std::endl;
+			// std::cout << r << std::endl;
 			if (r == 1) {
 				p_wmc = p_a_mb[a];
 				p_rl = p_a_mf[a];				

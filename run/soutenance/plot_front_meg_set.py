@@ -90,7 +90,7 @@ p = MPlotHelper()
 p.figure(figure_size[0], figure_size[1], dpi)
 
 
-markers = ['^', 'o', 'p', 's']
+markers = ['^', 'o', 'p', 's', 'D']
 
 
 xlimit = dict({0:(0.45,0.65),

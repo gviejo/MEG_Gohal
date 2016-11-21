@@ -19,10 +19,10 @@ from HumanLearning import HLearning
 from Models import *
 from Selection import *
 from Sferes import pareto
-from matplotlib import *
-from pylab import *
+#from matplotlib import *
+#from pylab import *
 import pickle
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 sys.path.append("set_meg_models")
 from fusion_1 import fusion_1
@@ -90,7 +90,7 @@ models = dict({'fusion':
 # -----------------------------------
 nb_blocs = 4
 nb_trials = 48
-nb_repeat = 1000
+nb_repeat = 200
 case = 'meg'
 
 human = HLearning(dict({'meg':('../PEPS_GoHaL/Beh_Model/',48), 'fmri':('../PEPS_GoHaL/fMRI',39)}))
@@ -128,7 +128,7 @@ for s in p_test.iterkeys():
     for k in xrange(nb_repeat):
         for i in xrange(nb_blocs):
             cats.reinitialize()
-            # cats.stimuli = np.array(map(_convertStimulus, human.subject[case][s[0:-1]][i+1]['sar'][:,0]))[0:nb_trials]
+            cats.stimuli = np.array(map(_convertStimulus, human.subject[case][s[0:-1]][i+1]['sar'][:,0]))[0:nb_trials]
             model.startBloc()
             for j in xrange(nb_trials):                    
                 state = cats.getStimulus(j)
@@ -201,6 +201,7 @@ for i, s in zip(xrange(len(p_test.keys())), p_test.keys()):
 with open("beh_model.pickle", 'wb') as handle:
     pickle.dump(data2, handle)    
 
+sys.exit()
 
 fig = figure(figsize = (12, 5))
 colors = ['blue', 'red', 'green']
