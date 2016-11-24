@@ -182,7 +182,7 @@ ax2.set_xlim(0,16)
 
 plt.savefig('fig_beh_model_meg.pdf')
 
-#plt.savefig('../../../Dropbox/Soutenance/Slides/figures/fig_beh_model_meg.pdf')
+plt.savefig('../../../Dropbox/Soutenance/Slides/figures/fig_beh_model_meg.pdf')
 
 
 # plt.savefig('../figures/Fig1.pdf')

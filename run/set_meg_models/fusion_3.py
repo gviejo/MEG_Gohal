@@ -21,7 +21,7 @@ def convertAction(action):
 
 
 
-class fusion_5():
+class fusion_3():
 	""" fusion strategy
 	
 	"""
@@ -43,9 +43,8 @@ class fusion_5():
 							"sigma":[0.0, 20.0],
 							"gamma":[0.0, 100.0],
 							"kappa":[0.0, 1.0],
-							"shift":[-20.0, 20.0],
-							"xi":[-20.0, 20.0]
-							}) 
+							"shift":[-20.0, 20.0]
+							}) # temperature for entropy from qlearning soft-max
 							
 
 		#Probability Initialization
@@ -294,13 +293,13 @@ class fusion_5():
 		r = (reward==0)*-1.0+(reward==1)*1.0+(reward==-1)*-1.0                
 		self.delta = float(r)-self.values_mf[self.current_state, self.current_action]        
 		self.values_mf[self.current_state, self.current_action] = self.values_mf[self.current_state, self.current_action]+self.parameters['alpha']*self.delta        
-		index = range(self.n_action)
-		index.pop(int(self.current_action))        
-		self.values_mf[self.current_state][index] = self.values_mf[self.current_state][index] + (1.0-self.parameters['kappa']) * (0.0 - self.values_mf[self.current_state][index])            
+		# index = range(self.n_action)
+		# index.pop(int(self.current_action))        
+		# self.values_mf[self.current_state][index] = self.values_mf[self.current_state][index] + (1.0-self.parameters['kappa']) * (0.0 - self.values_mf[self.current_state][index])            
 		r = (reward==0)*0.0+(reward==1)*1.0+(reward==-1)*0.0                
 		if not self.sferes:
 			self.responses[-1].append(r)		
-		if self.delta < self.parameters['shift'] or self.delta > self.parameters['xi']:			
+		if self.delta < self.parameters['shift']:			
 			if not self.sferes:
 				self.update[-1].append(1.0)
 			if self.parameters['noise']:

@@ -39,7 +39,9 @@ from fusion_4 import fusion_4
 from mixture_4 import mixture_4
 from fusion_5 import fusion_5
 from mixture_5 import mixture_5
-
+from fusion_3 import fusion_3
+from fusion_6 import fusion_6
+from mixture_6 import mixture_6
 
 p_order = dict({'fusion':['alpha','beta', 'noise','length', 'gain', 'threshold', 'gamma', 'sigma', 'kappa', 'shift'], 
 					'qlearning':['alpha','beta', 'sigma', 'kappa', 'shift'],
@@ -63,13 +65,16 @@ models = dict({ "fusion" 	:	FSelection				(front.states, front.actions),
 models_set = dict({'fusion':
 					{	1:fusion_1(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True),
 						2:fusion_2(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True),
+						3:fusion_3(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True),
 						4:fusion_4(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True),
-						5:fusion_5(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True)},
+						5:fusion_5(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True),
+						6:fusion_6(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True)},
 				'mixture': 
 					{	1:mixture_1(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
 						2:mixture_2(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
 						4:mixture_4(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
-						5:mixture_5(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True)},
+						5:mixture_5(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
+						6:mixture_6(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True)},
 				'selection':
 					{1:selection_1(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1,"eta":0.0001}, 0.05, 10, 0.1, True)}
 			})
@@ -77,12 +82,14 @@ nb_parameters = dict({'fusion':{		1:8,
 											2:9,
 											3:9,
 											4:10,
-											5:11	},
+											5:11,
+											6:10	},
 							'mixture':{		1:7,
 											2:8,
 											3:8,
 											4:9,
-											5:10		},
+											5:10,
+											6:9		},
 							'bayesian':{	1:4		},
 							'qlearning':{	1:3,
 											2:4		},
@@ -109,7 +116,8 @@ set_to_models = dict({	1:[1,2,3,4,5],
 						2:[1,2,4],
 						3:[1,2],
 						4:[1,2],
-						5:[1,2]})
+						5:[1,2],
+						6:[1,2]})
 
 n_run = 3
 data = {}
@@ -141,7 +149,7 @@ for s in sujet:
 	pareto2[s] = dict() # second pareto set with the set dimension
 	pareto3[s] = dict() # third pareto set with mixed models
 	# for p in set_to_models.iterkeys(): # ensemble testé
-	for p in [1,2,3,4,5]: # ensemble testé
+	for p in [1,2,3,4,5,6]: # ensemble testé
 		data[s][p] = dict()
 		pareto[s][p] = dict()		
 		for m in set_to_models[p]: # modele dans ensemble testé
@@ -152,7 +160,7 @@ for s in sujet:
 				if p in [1,2,3,4]:				
 					order = p_order[id_to_models[m]]
 					scale = models[id_to_models[m]].bounds
-				elif p in [5]:
+				elif p in [5, 6]:
 					order = p_order_5[id_to_models[m]]
 					scale = models_set[id_to_models[m]][p].bounds
 				for i in order:
@@ -188,7 +196,7 @@ for s in sujet:
 	for m in id_to_models.iterkeys():
 		tmp = {}	
 		# for p in set_to_models.iterkeys():
-		for p in [1,2,3,4,5]:
+		for p in [1,2,3,4,5,6]:
 			if m in set_to_models[p]:				
 				tmp[p] = pareto[s][p][id_to_models[m]]
 				if p in [1,2,3,4]: # VERY BAD
@@ -258,7 +266,7 @@ for s in sujet:
 		order = p_order[m]
 		p_test[s+str(set_)] = dict({m:dict(zip(order,tmp[4:]))})
 		# PROBLEM HERE                        
-	elif set_ in [5]:
+	elif set_ in [5,6]:
 		order = p_order_5[m]
 		p_test[s+str(set_)] = dict({m:dict(zip(order,tmp[4:]))})                        
 

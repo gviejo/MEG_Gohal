@@ -79,9 +79,22 @@ class EA():
         return choice, rt
 
     def leastSquares(self):                
-        for i in xrange(self.n_rs):            
-            self.mean[1,i] = np.mean(self.model.reaction[self.indice == i+1])
-        return np.sum(np.power(self.mean[0]-self.mean[1], 2))            
+        # for i in xrange(self.n_rs):            
+        #     self.mean[1,i] = np.mean(self.model.reaction[self.indice == i+1])
+        self.tmp2 = np.zeros(15)
+        indice = self.indice.flatten()
+        rt = self.model.reaction.flatten()
+        for i in xrange(self.n_trials*self.n_blocs):
+            if indice[i]-1 < 15:
+                self.mean[1][indice[i]-1] += rt[i]
+                self.tmp2[indice[i]-1] += 1.0
+
+        error = 0.0
+        for i in xrange(15):            
+            self.mean[1][i] = self.mean[1][i]/self.tmp2[i]
+            error += np.power(self.mean[1][i] - self.mean[0][i], 2)
+        return error
+        # return np.sum(np.power(self.mean[0]-self.mean[1], 2))            
         #return np.sum(np.power(self.errfunc(p[0], mean[1][0], mean[0][0]), 2))
 
     def alignToMedian(self):        

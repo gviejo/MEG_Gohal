@@ -19,8 +19,8 @@ from HumanLearning import HLearning
 from Models import *
 from Selection import *
 from Sferes import pareto
-#from matplotlib import *
-#from pylab import *
+from matplotlib import *
+from pylab import *
 import pickle
 #import matplotlib.pyplot as plt
 
@@ -34,7 +34,9 @@ from fusion_4 import fusion_4
 from mixture_4 import mixture_4
 from fusion_5 import fusion_5
 from mixture_5 import mixture_5
-
+from fusion_3 import fusion_3
+from fusion_6 import fusion_6
+from mixture_6 import mixture_6
 # -----------------------------------
 # ARGUMENT MANAGER
 # -----------------------------------
@@ -74,13 +76,16 @@ def center(x, s, m):
 models = dict({'fusion':
                     {   '1':fusion_1(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True),
                         '2':fusion_2(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True),
+                        '3':fusion_3(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True),
                         '4':fusion_4(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True),
-                        '5':fusion_5(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True)},
+                        '5':fusion_5(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True),
+                        '6':fusion_6(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True)},
                 'mixture': 
                     {   '1':mixture_1(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
                         '2':mixture_2(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
                         '4':mixture_4(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
-                        '5':mixture_5(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True)},
+                        '5':mixture_5(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
+                        '6':mixture_6(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True)},
                 'selection':
                     {'1':selection_1(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1,"eta":0.0001}, 0.05, 10, 0.1, True)}
             })
@@ -201,7 +206,7 @@ for i, s in zip(xrange(len(p_test.keys())), p_test.keys()):
 with open("beh_model.pickle", 'wb') as handle:
     pickle.dump(data2, handle)    
 
-sys.exit()
+
 
 fig = figure(figsize = (12, 5))
 colors = ['blue', 'red', 'green']

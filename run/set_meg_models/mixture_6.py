@@ -21,7 +21,7 @@ def convertAction(action):
 
 
 
-class mixture_5():
+class mixture_6():
     """Class that implement Collins models for action selection
 
     """
@@ -274,7 +274,8 @@ class mixture_5():
         r = (reward==0)*0.0+(reward==1)*1.0+(reward==-1)*0.0      
         if not self.sferes:
             self.responses[-1].append(r)                          
-        if self.delta < self.parameters['shift'] or self.delta > self.parameters['xi']:
+        # if self.delta < self.parameters['shift'] or self.delta > self.parameters['xi']:
+        if np.abs(self.delta) > self.parameters['shift']:
             if not self.sferes:
                 self.update[-1].append(1.0)
             if self.parameters['noise']:

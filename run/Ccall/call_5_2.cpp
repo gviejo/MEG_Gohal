@@ -14,7 +14,6 @@ void alignToMedian(double *daArray, int iSize) {
     double* dpSorted = new double[iSize];
     for (int i = 0; i < iSize; ++i) dpSorted[i] = daArray[i];
     for (int i = iSize - 1; i > 0; --i) {
-	std::cout << i << std::endl;
         for (int j = 0; j < i; ++j) {
             if (dpSorted[j] > dpSorted[j+1]) {
                 double dTemp = dpSorted[j];
@@ -74,7 +73,7 @@ double entropy(double *p) {
 	return -tmp;
 }
 // void sferes_call(double * fit, const char* data_dir, double alpha_, double beta_, double noise_, double length_, double weight_, double threshold_)
-void sferes_call(double * fit, const int N, const char* data_dir, double alpha_, double beta_, double noise_, double length_, double weight_, double threshold_, double sigma_, double kappa_, double shift_)
+void sferes_call(double * fit, const int N, const char* data_dir, double alpha_, double beta_, double noise_, double length_, double weight_, double threshold_, double sigma_, double kappa_, double shift_, double xi_)
 {
 	///////////////////
 	double max_entropy = -log2(0.2);
@@ -87,13 +86,8 @@ void sferes_call(double * fit, const int N, const char* data_dir, double alpha_,
 	double sigma=0.0+(20.0-0.0)*sigma_;	
 	double weight=0.0+(1.0-0.0)*weight_;
 	double kappa=0.0+(1.0-0.0)*kappa_;
-	double shift=-20.0+(20.0+20.0)*shift_;	
-
-//	std::cout << "alpha = " << alpha << std::endl;
-//	std::cout << "beta = " << beta << std::endl;
-//	std::cout << "noise = " << noise << std::endl;
-//	std::cout << "length = " << length << std::endl;
-//	std::cout << "shift = " << shift << std::endl;
+	double shift=-20.0+(20.0+20.0)*shift_;
+	double xi=-20.0+(20.0+20.0)*xi_;
 	
 	int nb_trials = N/4;
 	int n_state = 3;
@@ -143,7 +137,6 @@ void sferes_call(double * fit, const int N, const char* data_dir, double alpha_,
 	data_file2.close();	
 	}		
 	for (int i=0;i<4;i++)		
-	// for (int i=0;i<2;i++) 
 	{		
 		// START BLOC //
 		double p_s [length][n_state];
@@ -242,11 +235,6 @@ void sferes_call(double * fit, const int N, const char* data_dir, double alpha_,
 
 			double sum = 0.0;
 
-			// for (int n=0;n<5;n++) {
-			// 	std::cout << p_a_mb[n] << " ";
-			// }
-			// std::cout << std::endl;
-			//std::cout << "W= " << weigh[s] << std::endl;
 
 			for (int n=0;n<5;n++) {
 				p_a[n] = (1.0-weigh[s])*p_a_mf[n] + weigh[s]*p_a_mb[n];
@@ -260,13 +248,14 @@ void sferes_call(double * fit, const int N, const char* data_dir, double alpha_,
 			double N = nb_inferences+1.0;
 
 			values[j+i*nb_trials] = log(p_a[a]);
-			// std::cout << i << " " << j << " " << log(p_a[a]) << std::endl;
+
 			rt[j+i*nb_trials] = pow(log2(N), sigma) + H;
-			//std::cout << rt[j+i*nb_trials] << " " << nb_inferences << std::endl;
+				
+			// std::cout << rt[j+i*nb_trials] << std::endl;
+
 			// UPDATE WEIGHT
 			double p_wmc;
 			double p_rl;
-			// std::cout << r << std::endl;
 			if (r == 1) {
 				p_wmc = p_a_mb[a];
 				p_rl = p_a_mf[a];				
@@ -287,7 +276,9 @@ void sferes_call(double * fit, const int N, const char* data_dir, double alpha_,
 					values_mf[s][m] += (1.0 - kappa)*(0.0 - values_mf[s][m]);
 				}
 			}			
-			if (delta < shift) {						
+			// if ((delta < shift) || (delta > xi)) {						
+			if (abs(delta) > shift) {
+				// std::cout << abs(delta) << " " << shift << std::endl;
 				// UPDATE MEMORY 						
 				for (int k=length-1;k>0;k--) {
 					for (int n=0;n<3;n++) {
@@ -332,12 +323,15 @@ void sferes_call(double * fit, const int N, const char* data_dir, double alpha_,
 	}
 
 	for (int i=0;i<N;i++) {
-		mean_model[sari[i][3]-1]+=rt[i];
-		tmp2[sari[i][3]-1]+=1.0;				
+		if (sari[i][3]-1 < 15) {
+			mean_model[sari[i][3]-1]+=rt[i];		
+			tmp2[sari[i][3]-1]+=1.0;				
+		}
 	}	
 	double error = 0.0;
-	for (int i=0;i<15;i++) {
-		mean_model[i]/=tmp2[i];
+	for (int i=0;i<15;i++) {		
+		// std::cout << mean_model[i] << " " << tmp2[i] << std::endl;
+		mean_model[i]/=tmp2[i];				
 		error+=pow(mean_rt[i]-mean_model[i],2.0);				
 	}	
 	for (int i=0;i<N;i++) fit[0]+=values[i];	
