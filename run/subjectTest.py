@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-#!/usr/bin/python
-# encoding: utf-8
 """
 
 """
@@ -22,7 +20,9 @@ from Sferes import pareto
 from matplotlib import *
 from pylab import *
 import pickle
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+
+# np.seterr('raise')
 
 sys.path.append("set_meg_models")
 from fusion_1 import fusion_1
@@ -37,6 +37,9 @@ from mixture_5 import mixture_5
 from fusion_3 import fusion_3
 from fusion_6 import fusion_6
 from mixture_6 import mixture_6
+from fusion_7 import fusion_7
+from mixture_7 import mixture_7
+from mixture_3 import mixture_3
 # -----------------------------------
 # ARGUMENT MANAGER
 # -----------------------------------
@@ -61,7 +64,7 @@ def leastSquares(x, y):
         x[i] = fitfunc(p[0], x[i])
     return x    
 
-# def center(x):
+# def center(x, s, m):
 #     x = x-np.median(x)
 #     x = x/(np.percentile(x, 75)-np.percentile(x, 25))
 #     return x
@@ -79,13 +82,16 @@ models = dict({'fusion':
                         '3':fusion_3(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True),
                         '4':fusion_4(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True),
                         '5':fusion_5(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True),
-                        '6':fusion_6(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True)},
+                        '6':fusion_6(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True),
+                        '7':fusion_7(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1}, True)},
                 'mixture': 
                     {   '1':mixture_1(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
                         '2':mixture_2(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
+                        '3':mixture_3(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
                         '4':mixture_4(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
                         '5':mixture_5(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
-                        '6':mixture_6(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True)},
+                        '6':mixture_6(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True),
+                        '7':mixture_7(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {'length':1, 'weight':0.5}, True)},
                 'selection':
                     {'1':selection_1(['s1', 's2', 's3'], ['thumb', 'fore', 'midd', 'ring', 'little'], {"length":1,"eta":0.0001}, 0.05, 10, 0.1, True)}
             })
@@ -95,7 +101,7 @@ models = dict({'fusion':
 # -----------------------------------
 nb_blocs = 4
 nb_trials = 48
-nb_repeat = 200
+nb_repeat = 1000
 case = 'meg'
 
 human = HLearning(dict({'meg':('../PEPS_GoHaL/Beh_Model/',48), 'fmri':('../PEPS_GoHaL/fMRI',39)}))
@@ -108,9 +114,13 @@ cats = CATS(nb_trials)
 #     p_test = pickle.load(f)
 # with open("timing_v1.pickle", 'rb') as f:
 #     timing = pickle.load(f)
-with open("p_test_last_set.pickle", 'rb') as f:
+# with open("p_test_last_set.pickle", 'rb') as f:
+#     p_test = pickle.load(f)
+# with open("timing.pickle", 'rb') as f:
+#     timing = pickle.load(f)
+with open("p_test_pre_test.pickle", 'rb') as f:
     p_test = pickle.load(f)
-with open("timing.pickle", 'rb') as f:
+with open("timing_pre_test.pickle", 'rb') as f:
     timing = pickle.load(f)
 
 
@@ -140,7 +150,7 @@ for s in p_test.iterkeys():
                 action = model.chooseAction(state)
                 reward = cats.getOutcome(state, action, case=case)                
                 model.updateValue(reward)
-                # sys.stdin.readline()
+                
 
     # MODEL
     rtm = np.array(model.reaction).reshape(nb_repeat, nb_blocs, nb_trials)                        
@@ -149,10 +159,17 @@ for s in p_test.iterkeys():
     responses = np.array(model.responses).reshape(nb_repeat, nb_blocs, nb_trials)
     update = np.array(model.update).reshape(nb_repeat * nb_blocs, nb_trials)
     tmp = np.zeros((nb_repeat, 15))
+
     for i in xrange(nb_repeat):
         rtm[i] = center(rtm[i], s[0:-1], m) #TODO        
         step, indice = getRepresentativeSteps(rtm[i], state[i], action[i], responses[i], case)
-        tmp[i] = computeMeanRepresentativeSteps(step)[0]
+        if len(step[5]):
+            tmp[i] = computeMeanRepresentativeSteps(step)[0]
+        else:
+            # QUITE BAD
+            step[5] = np.array([0.0])
+            tmp[i] = computeMeanRepresentativeSteps(step)[0]
+
 
     pcrm['s'].append(state.reshape(nb_repeat*nb_blocs, nb_trials))
     pcrm['a'].append(action.reshape(nb_repeat*nb_blocs, nb_trials))
@@ -236,9 +253,9 @@ plt.savefig("plot2.pdf")
 fig = figure(figsize = (12,12))
 c = 0
 for s in allupdate.keys():    
-    if s[-1] == '4' or s[-1] == '3':
+    if s[-1] >= '3':
         c += 1
-        ax1 = fig.add_subplot(3,3,c)
+        ax1 = fig.add_subplot(3,4,c)
         for i in xrange(3):
             x = range(len(allupdate[s]['mean'][i]))
             y = allupdate[s]['mean'][i]
@@ -248,10 +265,13 @@ for s in allupdate.keys():
         ax1.set_ylabel("p(update WM)")
 
 plt.savefig("plot3.pdf")
-os.system("pdftk figure_set_meg_pareto.pdf plot1.pdf plot2.pdf plot3.pdf cat output plot_all_set_meg.pdf")
+os.system("pdftk soutenance/figure_set_meg_pareto.pdf plot1.pdf plot2.pdf plot3.pdf cat output plot_all_set_meg.pdf")
 os.system("rm plot1.pdf")
 os.system("rm plot2.pdf")
 os.system("rm plot3.pdf")
+
+
+show()
 
 # super_data[o] = data2
 # hrt = np.array(hrt)

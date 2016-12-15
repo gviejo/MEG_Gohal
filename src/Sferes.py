@@ -90,7 +90,7 @@ class EA():
                 self.tmp2[indice[i]-1] += 1.0
 
         error = 0.0
-        for i in xrange(15):            
+        for i in xrange(0,15):            
             self.mean[1][i] = self.mean[1][i]/self.tmp2[i]
             error += np.power(self.mean[1][i] - self.mean[0][i], 2)
         return error

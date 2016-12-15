@@ -21,12 +21,18 @@ with open("../pareto4.pickle", 'rb') as handle:
 	first_front = pickle.load(handle)
 with open("../position.pickle", 'rb') as handle:
 	pos = pickle.load(handle)
+with open("../position_pre_test.pickle", 'rb') as handle:
+	pos2 = pickle.load(handle)
 with open("../p_test_last_set.pickle", 'rb') as handle:
 	p_test = pickle.load(handle)
 tmp = {}
+tmp2 = {}
 for k in pos.iterkeys():
 	tmp[k[0:-1]] = pos[k]
+for k in pos2.iterkeys():
+	tmp2[k[0:-1]] = pos2[k]
 pos = tmp
+pos2 = tmp2
 
 ##################################
 # PLOT PARAMETERS ################
@@ -90,7 +96,7 @@ p = MPlotHelper()
 p.figure(figure_size[0], figure_size[1], dpi)
 
 
-markers = ['^', 'o', 'p', 's', 'D', 'H']
+markers = ['^', 'o', 'p', 's', 'D', 'H', '|']
 
 
 xlimit = dict({0:(0.45,0.65),
@@ -151,6 +157,7 @@ for i in xrange(n_subjects):
 
 
 	ax1.plot(pos[s][0], pos[s][1], '*', markersize = 10, color = 'black')		
+	ax1.plot(pos2[s][0], pos2[s][1], 'o', markersize = 10, color = 'black')		
 
 	ax1.locator_params(nbins=5)	
 
@@ -176,10 +183,10 @@ for i in xrange(n_subjects):
 line2 = tuple([plt.Line2D(range(1),range(1),alpha=1.0,color=colors_m[m], linewidth = 2) for m in colors_m.keys()])
 plt.figlegend(line2,tuple(legend_m.values()), loc = 'lower right', bbox_to_anchor = (0.999, 0.05))
 line3 = tuple([plt.Line2D(range(1),range(1), linestyle = '', marker = markers[i], alpha=1.0, markerfacecolor = 'white', color='black') for i in xrange(len(markers))])
-plt.figlegend(line3,tuple(["Version "+str(i+1) for i in xrange(5)]), loc = 'lower right', bbox_to_anchor = (0.86, 0.2))
+plt.figlegend(line3,tuple(["Version "+str(i+1) for i in xrange(6)]), loc = 'lower right', bbox_to_anchor = (0.86, 0.2))
 
 
 
 plt.savefig('figure_set_meg_pareto.pdf')
-plt.savefig('../../../Dropbox/Soutenance/Slides/figures/figure_set_meg_pareto.pdf')
+# plt.savefig('../../../Dropbox/Soutenance/Slides/figures/figure_set_meg_pareto.pdf')
 

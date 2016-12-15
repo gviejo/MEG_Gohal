@@ -10,7 +10,7 @@ n_trials = 48
 n_blocs = 4
 
 def SoftMaxValues(values, beta):
-	tmp0 = values - np.max(values)
+	tmp0 = values - np.max(values)	
 	tmp = np.exp(tmp0*float(beta))
 	return  tmp/float(np.sum(tmp))
 def convertStimulus(state):
@@ -21,7 +21,7 @@ def convertAction(action):
 
 
 
-class fusion_6():
+class fusion_7():
 	""" fusion strategy
 	
 	"""
@@ -162,11 +162,8 @@ class fusion_6():
 	def sigmoideModule(self):
 		np.seterr(invalid='ignore')
 		x = 2*self.max_entropy-self.Hb-self.Hf
-		# print "n=",self.n_element," i=", self.nb_inferences, " Hb=", self.Hb, " Hf=", self.Hf, " x=", x, " p(A)=",self.pA, "threshold= ", self.parameters['threshold'], "gain = ", self.parameters['gain']
-		if self.parameters['threshold']>100.0:
-			self.parameters['threshold'] = 100.0
 		self.pA = 1/(1+((self.n_element-self.nb_inferences)**self.parameters['threshold'])*np.exp(-x*self.parameters['gain']))
-		
+		# print "n=",self.n_element," i=", self.nb_inferences, " Hb=", self.Hb, " Hf=", self.Hf, " x=", x, " p(A)=",self.pA, "threshold= ", self.parameters['threshold'], "gain = ", self.parameters['gain']
 		return np.random.uniform(0,1) > self.pA
 	
 	def fusionModule(self):
@@ -201,7 +198,7 @@ class fusion_6():
 			# print "N=", self.nb_inferences
 			# print "Q_ba("+str(self.current_state)+")=",self.p_a_mb
 			# print "p_ba("+str(self.current_state)+")=",pa
-			self.h_bayes_only = -np.sum(pa*np.log2(pa))
+			# self.h_bayes_only = -np.sum(pa*np.log2(pa))
 			# print "H_ba =", self.h_bayes_only			
 			 
 	def computeValue(self, s, a, ind):
@@ -297,14 +294,13 @@ class fusion_6():
 		r = (reward==0)*-1.0+(reward==1)*1.0+(reward==-1)*-1.0                
 		self.delta = float(r)-self.values_mf[self.current_state, self.current_action]        
 		self.values_mf[self.current_state, self.current_action] = self.values_mf[self.current_state, self.current_action]+self.parameters['alpha']*self.delta        
-		index = range(self.n_action)
-		index.pop(int(self.current_action))        
-		self.values_mf[self.current_state][index] = self.values_mf[self.current_state][index] + (1.0-self.parameters['kappa']) * (0.0 - self.values_mf[self.current_state][index])            
+		# index = range(self.n_action)
+		# index.pop(int(self.current_action))        
+		# self.values_mf[self.current_state][index] = self.values_mf[self.current_state][index] + (1.0-self.parameters['kappa']) * (0.0 - self.values_mf[self.current_state][index])            
 		r = (reward==0)*0.0+(reward==1)*1.0+(reward==-1)*0.0                
 		if not self.sferes:
 			self.responses[-1].append(r)		
-		# if self.delta < self.parameters['shift'] or self.delta > self.parameters['xi']:			
-		if np.abs(self.delta) > self.parameters['shift']:
+		if self.delta < self.parameters['shift'] or self.delta > self.parameters['xi']:			
 			if not self.sferes:
 				self.update[-1].append(1.0)
 			if self.parameters['noise']:
